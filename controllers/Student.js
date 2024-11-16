@@ -87,3 +87,25 @@ exports.handleRfidScan = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+exports.getAllTimeInRecords = async (req, res) => {
+  try {
+    // Fetch all students along with their RFID scan records
+    const students = await Student.find(
+      {},
+      { name: 1, studentNumber: 1, rfidScans: 1, institute: 1 }
+    );
+
+    if (!students || students.length === 0) {
+      return res.status(404).json({ message: "No records found" });
+    }
+
+    res.status(200).json({
+      message: "RFID scan records retrieved successfully",
+      records: students,
+    });
+  } catch (error) {
+    console.error("Error retrieving RFID scan records:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};

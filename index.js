@@ -3,6 +3,7 @@ const express = require("express");
 const dotenv = require("dotenv");
 const cors = require("cors");
 const connectDB = require("./config/db");
+const morgan = require("morgan");
 
 // Load environment variables
 dotenv.config();
@@ -16,6 +17,13 @@ connectDB();
 // Middleware setup
 app.use(cors());
 app.use(express.json());
+app.use(morgan("dev"));
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(err.status || 500).json({
+    message: err.message || "Internal Server Error",
+  });
+});
 
 // Import routes
 const authRoutes = require("./routes/Auth.js");

@@ -86,3 +86,80 @@ exports.loginUser = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+// Get all users
+exports.getAllUsers = async (req, res) => {
+  try {
+    // Fetch all users from the database
+    const users = await User.find();
+
+    if (!users || users.length === 0) {
+      return res.status(404).json({ message: "No users found" });
+    }
+
+    // Return the list of users
+    res.status(200).json({ users });
+  } catch (error) {
+    console.error("Error fetching users:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// Edit a user
+exports.editUser = async (req, res) => {
+  const { userId } = req.params; // Get the user ID from route parameters
+  const { name, email, password, role } = req.body; // Include 'role' in the request body
+
+  // Check if at least one field is provided for update
+  if (!name && !email && !password && !role) {
+    return res
+      .status(400)
+      .json({ message: "Please provide at least one field to update" });
+  }
+
+  try {
+    // Find the user by ID
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Update the fields if provided
+    if (name) user.name = name;
+    if (email) user.email = email;
+    if (role) user.role = role; // Update the role field
+    if (password) {
+      // Hash the new password
+      const hashedPassword = await bcrypt.hash(password, 10);
+      user.password = hashedPassword;
+    }
+
+    // Save the updated user
+    await user.save();
+
+    res.status(200).json({ message: "User updated successfully", user });
+  } catch (error) {
+    console.error("Error updating user:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// Delete a user
+exports.deleteUser = async (req, res) => {
+  const { userId } = req.params; // Get the user ID from route parameters
+
+  try {
+    // Find the user by ID and delete
+    const user = await User.findByIdAndDelete(userId);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json({ message: "User deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting user:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};

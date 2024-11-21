@@ -1,6 +1,7 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
+const AuthService = require("../controllers/Login");
 
 // Register a new user
 exports.registerUser = async (req, res) => {
@@ -43,7 +44,6 @@ exports.registerUser = async (req, res) => {
 exports.loginUser = async (req, res) => {
   const { email, password } = req.body;
 
-  // Check if email and password are provided
   if (!email || !password) {
     return res
       .status(400)
@@ -51,26 +51,9 @@ exports.loginUser = async (req, res) => {
   }
 
   try {
-    // Find the user by email
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(400).json({ message: "Invalid credentials" });
-    }
+    // Use AuthService to handle login logic
+    const { token, user } = await AuthService.login(email, password);
 
-    // Compare the provided password with the stored hashed password
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(400).json({ message: "Invalid credentials" });
-    }
-
-    // Generate a JWT token
-    const token = jwt.sign(
-      { id: user._id, role: user.role },
-      process.env.JWT_SECRET,
-      { expiresIn: "1h" }
-    );
-
-    // Return the token and user info
     res.json({
       message: "Login successful",
       token,
@@ -83,6 +66,26 @@ exports.loginUser = async (req, res) => {
     });
   } catch (error) {
     console.error("Error logging in user:", error);
+    res.status(400).json({ message: error.message });
+  }
+};
+
+exports.logoutUser = async (req, res) => {
+  try {
+    const { userId, name } = req.body; // Expect both userId and name in the request body
+
+    if (!userId || !name) {
+      return res
+        .status(400)
+        .json({ message: "User ID and name are required for logout" });
+    }
+
+    // Call AuthService's logout function with user details
+    await AuthService.logout({ userId, name });
+
+    res.status(200).json({ message: `Logout successful for ${name}` });
+  } catch (error) {
+    console.error("Error logging out user:", error);
     res.status(500).json({ message: "Server error" });
   }
 };

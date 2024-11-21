@@ -28,10 +28,12 @@ app.use((err, req, res, next) => {
 // Import routes
 const authRoutes = require("./routes/Auth.js");
 const studentRoutes = require("./routes/Student.js");
+const userLogsRoutes = require("./routes/Login.js");
 
 // Use routes
 app.use("/api/auth", authRoutes);
 app.use("/api/students", studentRoutes);
+app.use("/api/log", userLogsRoutes);
 
 // Base route for testing
 app.get("/", (req, res) => {
